@@ -12,14 +12,15 @@ tasks.register('createMockGoogleServices') {
             new File("$projectDir/google-services.json").text = secrets
             return
         }
-        def rootMockFile = file("google-services.json")
-        if (rootMockFile.exists() && rootMockFile.length() == 0) {
-            rootMockFile.delete()
+        def mockFile = file("google-services.json")
+        if (mockFile.exists() && mockFile.length() == 0) {
+            mockFile.delete()
         }
-        def mockFile = file("src/debug/google-services.json")
-        if (!mockFile.exists()) {
-            mockFile.parentFile.mkdirs()
-            def mockContent = """{
+        // The mock goes to the app root, which the google-services plugin searches
+        // for every variant; the release variant does NOT search src/debug/, so a
+        // debug-only mock left release builds without the secret failing with
+        // "File google-services.json is missing". An existing (real) file wins.
+        def mockContent = """{
   "project_info": {
     "project_number": "123456789000",
     "firebase_url": "https://mock-project-default-rtdb.firebaseio.com",
@@ -49,6 +50,7 @@ tasks.register('createMockGoogleServices') {
   ],
   "configuration_version": "1"
 }"""
+        if (!mockFile.exists()) {
             mockFile.text = mockContent
         }
     }
