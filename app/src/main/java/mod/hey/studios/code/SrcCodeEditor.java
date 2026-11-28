@@ -664,7 +664,7 @@ public class SrcCodeEditor extends BaseAppCompatActivity {
 
         EditorColorScheme scheme = binding.editor.getColorScheme();
         int bg = scheme.getColor(EditorColorScheme.WHOLE_BACKGROUND);
-        binding.root.setBackgroundColor(bg);
+        binding.getRoot().setBackgroundColor(bg);
         binding.editor.setBackgroundColor(bg);
 
         // The TextMate path of Sora does not set the line number colors; the default
