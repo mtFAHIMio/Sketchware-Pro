@@ -59,6 +59,20 @@ tasks.register('createMockGoogleServices') {
 preBuild.dependsOn createMockGoogleServices
 
 /**
+ * The Crashlytics plugin wires uploadCrashlyticsMappingFile* into the release
+ * build. Skip it unless Firebase credentials are available (FIREBASE_TOKEN /
+ * GOOGLE_CREDENTIALS env or firebaseApiKey property), so CI and local builds
+ * without credentials do not fail at the upload step.
+ */
+def hasFirebaseCredentials = System.getenv("FIREBASE_TOKEN") != null ||
+        System.getenv("GOOGLE_CREDENTIALS") != null ||
+        startParameter.projectProperties.containsKey("firebaseApiKey")
+
+tasks.matching { it.name.startsWith("uploadCrashlyticsMappingFile") }.configureEach {
+    enabled = hasFirebaseCredentials
+}
+
+/**
  * Strips embedded .dex entries from bundletool.jar to prevent R8 bytecode collision errors.
  */
 @SuppressWarnings('GrMethodMayBeStatic')
