@@ -66,7 +66,7 @@ preBuild.dependsOn createMockGoogleServices
  */
 def hasFirebaseCredentials = System.getenv("FIREBASE_TOKEN") != null ||
         System.getenv("GOOGLE_CREDENTIALS") != null ||
-        startParameter.projectProperties.containsKey("firebaseApiKey")
+        gradle.startParameter.projectProperties.containsKey("firebaseApiKey")
 
 tasks.matching { it.name.startsWith("uploadCrashlyticsMappingFile") }.configureEach {
     enabled = hasFirebaseCredentials
