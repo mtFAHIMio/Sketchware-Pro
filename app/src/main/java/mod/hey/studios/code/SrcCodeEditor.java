@@ -33,6 +33,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -79,6 +81,20 @@ public class SrcCodeEditor extends BaseAppCompatActivity {
             new Pair<>("NotepadXX", SchemeNotepadXX.class)
     );
     /**
+     * Factories for the built-in schemes declared in {@link #KNOWN_COLOR_SCHEMES},
+     * keyed by the scheme class. Fresh instances are created on demand: a color
+     * scheme can only be attached to one editor, and the keying keeps the factory
+     * in sync with the dialog order without reflection.
+     */
+    private static final Map<Class<?>, Supplier<EditorColorScheme>> SCHEME_FACTORIES = Map.of(
+            EditorColorScheme.class, EditorColorScheme::new,
+            SchemeDarcula.class, SchemeDarcula::new,
+            SchemeGitHub.class, SchemeGitHub::new,
+            SchemeEclipse.class, SchemeEclipse::new,
+            SchemeVS2019.class, SchemeVS2019::new,
+            SchemeNotepadXX.class, SchemeNotepadXX::new
+    );
+    /**
      * Display names of the available TextMate themes, in the same order as
      * {@link mod.jbk.code.CodeEditorColorSchemes#THEMES}.
      */
@@ -116,18 +132,14 @@ public class SrcCodeEditor extends BaseAppCompatActivity {
 
     public static void selectTheme(CodeEditor ed, int which) {
         // Built-in schemes only recolor the editor chrome; use selectTextMateTheme for Kotlin/XML.
-        // Instantiate the scheme declared at this position in KNOWN_COLOR_SCHEMES so the
-        // dialog order and the applied scheme can never drift apart again.
+        // The factory map is keyed by the classes declared in KNOWN_COLOR_SCHEMES, so the
+        // dialog order and the applied scheme stay in sync; a fresh instance is required
+        // because a scheme can only be attached to one editor.
         Class<? extends EditorColorScheme> cls = (which >= 0 && which < KNOWN_COLOR_SCHEMES.size())
                 ? KNOWN_COLOR_SCHEMES.get(which).second
                 : EditorColorScheme.class;
-        EditorColorScheme scheme;
-        try {
-            scheme = cls.getDeclaredConstructor().newInstance();
-        } catch (ReflectiveOperationException e) {
-            scheme = new EditorColorScheme();
-        }
-        ed.setColorScheme(scheme);
+        Supplier<EditorColorScheme> factory = SCHEME_FACTORIES.get(cls);
+        ed.setColorScheme(factory != null ? factory.get() : new EditorColorScheme());
     }
 
     /**
